@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 class MessageMetadata:
     originSubject: Optional[str]
     traceId: Optional[str]
-    additionalProps: Dict[str, Any]
+    additional_props: Dict[str, Any]
 
     def __init__(
         self,
@@ -15,6 +15,19 @@ class MessageMetadata:
         self.origin_subject = origin_subject
         self.trace_id = trace_id
         self.additional_props = additional_props
+
+    @staticmethod
+    def create_from_dict(metadata_dictionary: Dict[str, Any]):
+        origin_subject = None
+        trace_id = None
+        if "originSubject" in metadata_dictionary:
+            origin_subject = metadata_dictionary["originSubject"]
+            del metadata_dictionary["originSubject"]
+        if "traceId" in metadata_dictionary:
+            trace_id = metadata_dictionary["traceId"]
+            del metadata_dictionary["traceId"]
+
+        return MessageMetadata(origin_subject, trace_id, **metadata_dictionary)
 
     def to_dict(self):
         result = {}

@@ -11,7 +11,7 @@ class MessageFromSubscription:
         data: Dict[str, Any],
         seq: int,
         subject: str,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: Optional[MessageMetadata] = None,
         is_last_attempt: Optional[bool] = None,
     ):
         self.type = type
@@ -29,7 +29,7 @@ class MessageFromSubscription:
             "seq": self.seq,
         }
         if self.metadata != None:
-            result["metadata"] = self.metadata  # TODO: convert to MessageMetadata
+            result["metadata"] = self.metadata.to_dict()
         if self.is_last_attempt != None:
             result["isLastAttempt"] = self.is_last_attempt
         return result
@@ -42,5 +42,7 @@ class MessageFromSubscription:
             data=parsed_message_data["data"],
             seq=message.metadata.sequence.stream,
             subject=message.subject[len(prefix) :],
-            metadata=parsed_message_data.get("metadata", None),
+            metadata=MessageMetadata.create_from_dict(parsed_message_data["metadata"])
+            if "metadata" in parsed_message_data
+            else None,
         )
