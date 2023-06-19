@@ -1,11 +1,11 @@
-from ast import Dict
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 from nats.aio.client import Client
 from .message import Message
 from nats.js.api import PubAck
 import json
-from .fetch.fetch import Fetch, Projection
+from .projections.fetch import Fetch
+from .projections.projection import Projection
 
 
 class MessageStore:

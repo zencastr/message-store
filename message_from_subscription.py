@@ -16,7 +16,7 @@ class MessageFromSubscription:
     ):
         self.type = type
         self.data = data
-        self.seq = (seq,)
+        self.seq = seq
         self.subject = subject
         self.is_last_attempt = is_last_attempt
         self.metadata = metadata
@@ -40,7 +40,7 @@ class MessageFromSubscription:
         return MessageFromSubscription(
             type=parsed_message_data["type"],
             data=parsed_message_data["data"],
-            seq=message.metadata.sequence,
+            seq=message.metadata.sequence.stream,
             subject=message.subject[len(prefix) :],
             metadata=parsed_message_data.get("metadata", None),
         )
