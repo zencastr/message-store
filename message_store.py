@@ -11,7 +11,6 @@ class MessageStore:
     def __init__(
         self, nats_connection: Client, prefix: str, should_create_missing_streams=False
     ):
-        # self.__nats_connection = nats_connection
         self.__jetstream = nats_connection.jetstream()
         self.__should_create_missing_streams = should_create_missing_streams
         self.__nats_subject_prefix = f"{prefix}." if prefix != "" else ""
@@ -49,11 +48,19 @@ class MessageStore:
                 ) from None
 
     async def publish_message(
-        self, subject: str, message: Message, msgId: Optional[str] = None
+        self, subject: str, message: Message, msg_id: Optional[str] = None
     ) -> PubAck:
+        """
+        Publishes a message with the format: type, data and optional metadata to
+        the subject (automatically prefixed by the prefix provided to the ctor)
+        Returns PubAck that contains:
+        duplicate - was there a message published with the same msg_id inside the stream's duplicate window check
+        seq - sequence number for the stream
+        stream - stream name
+        """
         headers: Optional[Dict] = None
-        if msgId != None:
-            headers["Nats-Msg-Id"] = msgId
+        if msg_id != None:
+            headers["Nats-Msg-Id"] = msg_id
         return await self.__jetstream.publish(
             f"{self.__nats_subject_prefix}{subject}",
             json.dumps(message.to_dict()).encode("utf8"),
