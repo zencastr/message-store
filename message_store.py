@@ -1,10 +1,11 @@
 from ast import Dict
 import logging
-from typing import Optional
+from typing import Any, Optional
 from nats.aio.client import Client
 from .message import Message
 from nats.js.api import PubAck
 import json
+from .fetch.fetch import Fetch, Projection
 
 
 class MessageStore:
@@ -66,3 +67,7 @@ class MessageStore:
             json.dumps(message.to_dict()).encode("utf8"),
             headers=headers,
         )
+
+    async def fetch(self, subject: str, projection: Projection) -> Any:
+        fetcher = Fetch(self.__jetstream, self.__nats_subject_prefix)
+        return await fetcher.fetch(subject, projection)
