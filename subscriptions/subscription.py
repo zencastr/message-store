@@ -84,7 +84,7 @@ class Subscription:
 
                 except Exception as exception:
                     message_store_logger.warning(
-                        f"Failed to handle with {message.subject}, data: {message.data}, exception: {exception}"
+                        f"Failed to handle message with subject {jetstream_message.subject}, seq: {jetstream_message.metadata.sequence.stream}, data: {jetstream_message.data}, exception: {exception}"
                     )
                     raise
                 finally:
