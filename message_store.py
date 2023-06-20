@@ -8,6 +8,7 @@ from .projections.fetch import Fetch
 from .projections.projection import Projection
 from .message_from_subscription import MessageFromSubscription
 from .subscriptions.subscription import Subscription
+from .message_store_logger import message_store_logger
 
 
 class MessageStore:
@@ -33,20 +34,22 @@ class MessageStore:
             stream_name = await self.__jetstream.find_stream_name_by_subject(
                 nats_stream_subject
             )
-            logging.info(
+            message_store_logger.info(
                 f"Stream covering subject {nats_stream_subject} exists. Its name is {stream_name}"
             )
 
         except:
             new_stream_name = f"{self.__nats_stream_prefix}{category_name}"
             if self.__should_create_missing_streams:
-                logging.info(
+                message_store_logger.info(
                     f"Stream covering subject {nats_stream_subject} does not exist, creating one named {new_stream_name}"
                 )
                 await self.__jetstream.add_stream(
                     name=new_stream_name, subjects=[nats_stream_subject]
                 )
-                logging.info(f"Stream {new_stream_name} created successfuly")
+                message_store_logger.info(
+                    f"Stream {new_stream_name} created successfuly"
+                )
             else:
                 raise Exception(
                     f"Stream covering subject {nats_stream_subject} does not exist, please create one named {new_stream_name}"
@@ -79,8 +82,8 @@ class MessageStore:
     def create_subscription(
         self,
         subject: str,
-        handlers: dict[str, Callable[[MessageFromSubscription], None]],
         consumer_name: str,
+        handlers: dict[str, Callable[[MessageFromSubscription], None]],
     ) -> Subscription:
         return Subscription(
             self.__jetstream,

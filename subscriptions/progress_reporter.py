@@ -2,6 +2,7 @@ import asyncio
 from typing import Optional, Callable
 from nats.aio.msg import Msg
 import logging
+from ..message_store_logger import message_store_logger
 
 
 class ProgressReporter:
@@ -24,7 +25,7 @@ class ProgressReporter:
     async def __report_progress(self, jetstream_message: Msg):
         await asyncio.sleep(self.__reportIntervalInSeconds)
         await jetstream_message.in_progress()
-        logging.debug(
+        message_store_logger.debug(
             f"Sent +WPI to jetstream for message with seq: {jetstream_message.metadata.sequence.stream}, subject {jetstream_message.subject} from stream {jetstream_message.metadata.stream}"
         )
         await self.__report_progress(jetstream_message)
