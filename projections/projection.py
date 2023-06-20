@@ -11,11 +11,11 @@ class Projection:
         handlers: dict[str, Callable[[T, MessageFromSubscription], T]],
     ):
         self.handlers = handlers
-        self.__entity = init()
+        self._entity = init()
 
     def handle(self, type: str, message: MessageFromSubscription):
         if type in self.handlers:
-            self.__entity = self.handlers[type](self.__entity, message)
+            self._entity = self.handlers[type](self._entity, message)
 
     def get_result(self) -> T:
-        return self.__entity
+        return self._entity

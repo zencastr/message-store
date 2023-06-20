@@ -17,10 +17,10 @@ class MessageStore:
     ):
         if prefix.endswith("."):
             prefix = prefix[:-1]
-        self.__jetstream = nats_connection.jetstream()
-        self.__should_create_missing_streams = should_create_missing_streams
-        self.__nats_subject_prefix = f"{prefix}." if prefix != "" else ""
-        self.__nats_stream_prefix = f"{prefix}-" if prefix != "" else ""
+        self._jetstream = nats_connection.jetstream()
+        self._should_create_missing_streams = should_create_missing_streams
+        self._nats_subject_prefix = f"{prefix}." if prefix != "" else ""
+        self._nats_stream_prefix = f"{prefix}-" if prefix != "" else ""
 
     async def ensure_stream(self, category_name: str) -> None:
         """
@@ -29,9 +29,9 @@ class MessageStore:
         Otherwise an exception will be raised
         The term category comes from here: http://docs.eventide-project.org/user-guide/stream-names/#parts
         """
-        nats_stream_subject = f"{self.__nats_subject_prefix}{category_name}.>"
+        nats_stream_subject = f"{self._nats_subject_prefix}{category_name}.>"
         try:
-            stream_name = await self.__jetstream.find_stream_name_by_subject(
+            stream_name = await self._jetstream.find_stream_name_by_subject(
                 nats_stream_subject
             )
             message_store_logger.info(
@@ -39,12 +39,12 @@ class MessageStore:
             )
 
         except:
-            new_stream_name = f"{self.__nats_stream_prefix}{category_name}"
-            if self.__should_create_missing_streams:
+            new_stream_name = f"{self._nats_stream_prefix}{category_name}"
+            if self._should_create_missing_streams:
                 message_store_logger.info(
                     f"Stream covering subject {nats_stream_subject} does not exist, creating one named {new_stream_name}"
                 )
-                await self.__jetstream.add_stream(
+                await self._jetstream.add_stream(
                     name=new_stream_name, subjects=[nats_stream_subject]
                 )
                 message_store_logger.info(
@@ -68,15 +68,15 @@ class MessageStore:
         """
         headers: Optional[Dict] = None
         if msg_id != None:
-            headers["Nats-Msg-Id"] = msg_id
-        return await self.__jetstream.publish(
-            f"{self.__nats_subject_prefix}{subject}",
+            headers = {"Nats-Msg-Id": msg_id}
+        return await self._jetstream.publish(
+            f"{self._nats_subject_prefix}{subject}",
             json.dumps(message.to_dict()).encode("utf8"),
             headers=headers,
         )
 
     async def fetch(self, subject: str, projection: Projection) -> Any:
-        fetcher = Fetch(self.__jetstream, self.__nats_subject_prefix)
+        fetcher = Fetch(self._jetstream, self._nats_subject_prefix)
         return await fetcher.fetch(subject, projection)
 
     def create_subscription(
@@ -84,11 +84,15 @@ class MessageStore:
         subject: str,
         consumer_name: str,
         handlers: dict[str, Callable[[MessageFromSubscription], None]],
+        max_number_of_retries: int = 3,
+        dead_letter_subject: Optional[str] = None,
     ) -> Subscription:
         return Subscription(
-            self.__jetstream,
-            self.__nats_subject_prefix,
+            self._jetstream,
+            self._nats_subject_prefix,
             subject,
             consumer_name,
             handlers,
+            max_number_of_retries,
+            dead_letter_subject,
         )
