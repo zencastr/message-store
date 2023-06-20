@@ -1,11 +1,13 @@
 import logging
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Callable
 from nats.aio.client import Client
 from .message import Message
 from nats.js.api import PubAck
 import json
 from .projections.fetch import Fetch
 from .projections.projection import Projection
+from .message_from_subscription import MessageFromSubscription
+from .subscriptions.subscription import Subscription
 
 
 class MessageStore:
@@ -73,3 +75,17 @@ class MessageStore:
     async def fetch(self, subject: str, projection: Projection) -> Any:
         fetcher = Fetch(self.__jetstream, self.__nats_subject_prefix)
         return await fetcher.fetch(subject, projection)
+
+    def create_subscription(
+        self,
+        subject: str,
+        handlers: dict[str, Callable[[MessageFromSubscription], None]],
+        consumer_name: str,
+    ) -> Subscription:
+        return Subscription(
+            self.__jetstream,
+            self.__nats_subject_prefix,
+            subject,
+            consumer_name,
+            handlers,
+        )

@@ -29,7 +29,6 @@ class Fetch:
             processed_count += 1
             if processed_count == total_messages_in_stream:
                 await subscription.unsubscribe()
-                break
 
         return projection.get_result()
 

@@ -35,7 +35,9 @@ class MessageFromSubscription:
         return result
 
     @staticmethod
-    def create_from_js_message(prefix: str, message: Msg):
+    def create_from_js_message(
+        prefix: str, message: Msg, max_number_of_redeliveries: Optional[int] = None
+    ):
         parsed_message_data: dict = json.loads(message.data.decode())
         return MessageFromSubscription(
             type=parsed_message_data["type"],
@@ -45,4 +47,7 @@ class MessageFromSubscription:
             metadata=MessageMetadata.create_from_dict(parsed_message_data["metadata"])
             if "metadata" in parsed_message_data
             else None,
+            is_last_attempt=message.metadata.num_delivered >= max_number_of_redeliveries
+            if max_number_of_redeliveries != None
+            else None,  # it might actually go over the max_number_of_redelivereis because of timeouts
         )
