@@ -12,6 +12,8 @@ class MessageStore:
     def __init__(
         self, nats_connection: Client, prefix: str, should_create_missing_streams=False
     ):
+        if prefix.endswith("."):
+            prefix = prefix[:-1]
         self.__jetstream = nats_connection.jetstream()
         self.__should_create_missing_streams = should_create_missing_streams
         self.__nats_subject_prefix = f"{prefix}." if prefix != "" else ""
