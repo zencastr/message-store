@@ -51,3 +51,6 @@ class MessageFromSubscription:
             if max_number_of_redeliveries != None
             else None,  # it might actually go over the max_number_of_redelivereis because of timeouts
         )
+
+    def __repr__(self):
+        return str(self.to_dict())

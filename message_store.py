@@ -17,6 +17,7 @@ class MessageStore:
     ):
         if prefix.endswith("."):
             prefix = prefix[:-1]
+        self._nats_connection = nats_connection
         self._jetstream = nats_connection.jetstream()
         self._should_create_missing_streams = should_create_missing_streams
         self._nats_subject_prefix = f"{prefix}." if prefix != "" else ""
@@ -88,6 +89,7 @@ class MessageStore:
         dead_letter_subject: Optional[str] = None,
     ) -> Subscription:
         return Subscription(
+            self._nats_connection,
             self._jetstream,
             self._nats_subject_prefix,
             subject,

@@ -1,4 +1,5 @@
-from nats.errors import TimeoutError
+from nats.errors import TimeoutError, ConnectionClosedError
+from nats.aio.client import Client as NatsClient
 from nats.js.client import JetStreamContext
 from nats.aio.msg import Msg
 from typing import Dict, Callable, Optional
@@ -12,6 +13,7 @@ import json
 class Subscription:
     def __init__(
         self,
+        nats_connection: NatsClient,
         jetstream_client: JetStreamContext,
         nats_subject_prefix: str,
         subject: str,
@@ -20,6 +22,7 @@ class Subscription:
         max_number_of_retries: Optional[int] = 3,
         dead_letter_subject: Optional[str] = None,
     ):
+        self._nats_connection = nats_connection
         self._jetstream_client = jetstream_client
         self._nats_subject_prefix = nats_subject_prefix
         self._subject = subject
@@ -41,7 +44,7 @@ class Subscription:
                 durable=self._consumer_name,
             )
             progress_reporter = ProgressReporter()
-            while self._is_subscription_active:
+            while not self._nats_connection.is_closed and self._is_subscription_active:
                 try:
                     jetstream_messages = await pull_subscription.fetch(
                         batch=1, timeout=self._pull_wait_timeout_in_secs
@@ -54,6 +57,11 @@ class Subscription:
                         f'No messages arrived during the pull_wait_timeout_in_secs ({self._pull_wait_timeout_in_secs}) for subject {self._nats_subject_prefix}{self._subject}. "Re-arming" wait for messages'
                     )
                     continue
+                except ConnectionClosedError:
+                    message_store_logger.info(
+                        f"Connection to nats was closed, stopping subscription to {self._subject}"
+                    )
+                    break
 
                 try:
                     if self._was_message_redelivered_too_many_times(jetstream_message):
@@ -81,12 +89,17 @@ class Subscription:
                             json.dumps(message.to_dict(), indent=2),
                         )
                     await jetstream_message.ack()
-
+                except ConnectionClosedError:
+                    message_store_logger.warn(
+                        f"Connection to nats/jetstream was closed while handling {message}. It will be retried if it wasn't the last attempt (is_last_attempt != False). Stopping subscription to {self._subject}"
+                    )
+                    break
                 except Exception as exception:
                     message_store_logger.warning(
                         f"Failed to handle message with subject {jetstream_message.subject}, seq: {jetstream_message.metadata.sequence.stream}, data: {jetstream_message.data}, exception: {exception}"
                     )
-                    await jetstream_message.nak()
+                    if not self._nats_connection.is_closed:
+                        await jetstream_message.nak()
                 finally:
                     progress_reporter.stop_reporting_progress()
 
