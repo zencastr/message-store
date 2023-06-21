@@ -1,4 +1,4 @@
-from typing import TypeVar, Callable, Any
+from typing import TypeVar, Callable
 from ..message_from_subscription import MessageFromSubscription
 
 T = TypeVar("T")

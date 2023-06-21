@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Optional, Dict, Callable
 from nats.aio.client import Client
 from .message import Message
@@ -76,7 +75,7 @@ class MessageStore:
             headers=headers,
         )
 
-    async def fetch(self, subject: str, projection: Projection) -> Any:
+    async def fetch(self, subject: str, projection: Projection):
         fetcher = Fetch(self._jetstream, self._nats_subject_prefix)
         return await fetcher.fetch(subject, projection)
 
