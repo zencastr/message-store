@@ -86,7 +86,7 @@ class Subscription:
                     message_store_logger.warning(
                         f"Failed to handle message with subject {jetstream_message.subject}, seq: {jetstream_message.metadata.sequence.stream}, data: {jetstream_message.data}, exception: {exception}"
                     )
-                    raise
+                    await jetstream_message.nak()
                 finally:
                     progress_reporter.stop_reporting_progress()
 
@@ -108,9 +108,16 @@ class Subscription:
         )
         await message.term()
         if self._dead_letter_subject != None:
+            failed_message_subject_without_prefix = message.subject[
+                len(self._nats_subject_prefix) :
+            ]
+            dead_letter_subject_for_failed_msg = (
+                f"{self._dead_letter_subject}.{failed_message_subject_without_prefix}"
+            )
             message_store_logger.info(
-                f"Sending #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream} to dead letter with subject ({self._dead_letter_subject})"
+                f"Sending #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream} to dead letter with subject ({dead_letter_subject_for_failed_msg})"
             )
             await self._jetstream_client.publish(
-                self._dead_letter_subject, message.data
+                dead_letter_subject_for_failed_msg,
+                message.data,
             )

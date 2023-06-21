@@ -94,5 +94,7 @@ class MessageStore:
             consumer_name,
             handlers,
             max_number_of_retries,
-            dead_letter_subject,
+            dead_letter_subject=f"{self._nats_subject_prefix}{dead_letter_subject}"
+            if dead_letter_subject != None
+            else None,
         )
