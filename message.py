@@ -21,3 +21,13 @@ class Message:
         if self.metadata != None:
             result["metadata"] = self.metadata.to_dict()
         return result
+
+    @staticmethod
+    def create_from_dict(message_dict: Dict[str, Any]):
+        return Message(
+            type=message_dict["type"],
+            data=message_dict["data"],
+            metadata=MessageMetadata.create_from_dict(message_dict["metadata"])
+            if "metadata" in message_dict
+            else None,
+        )

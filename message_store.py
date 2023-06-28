@@ -1,4 +1,4 @@
-from typing import Any, Optional, Dict, Callable
+from typing import Optional, Dict, Callable
 from nats.aio.client import Client
 from .message import Message
 from nats.js.api import PubAck
@@ -8,6 +8,8 @@ from .projections.projection import Projection
 from .message_from_subscription import MessageFromSubscription
 from .subscriptions.subscription import Subscription
 from .message_store_logger import message_store_logger
+from .timeout_exception import TimeoutException
+import asyncio
 
 
 class MessageStore:
@@ -99,3 +101,27 @@ class MessageStore:
             if dead_letter_subject != None
             else None,
         )
+
+    async def wait_for(
+        self, subject: str, predicate: Callable[[Message], bool], timeout: int = 5
+    ) -> Message:
+        """
+        Waits for a message (event/command) on the subject (automatically prefixed by the prefix provided to the ctor)
+        that matches the predicate. Returns the message if found, otherwise raises TimeoutException
+        """
+        subscription = await self._nats_connection.subscribe(subject)
+
+        async def start_timeout_countdown():
+            await asyncio.sleep(timeout)
+            await subscription.unsubscribe()
+
+        timeout_task = asyncio.create_task(start_timeout_countdown())
+
+        async for msg in subscription.messages:
+            message = Message.create_from_dict(json.loads(msg.data.decode("utf-8")))
+            if predicate(message):
+                timeout_task.cancel()
+                await subscription.unsubscribe()
+                return message
+
+        raise TimeoutException(f"Timed out waiting for a message on subject {subject}")
