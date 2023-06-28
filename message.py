@@ -31,3 +31,6 @@ class Message:
             if "metadata" in message_dict
             else None,
         )
+
+    def __repr__(self):
+        return str(self.to_dict())
