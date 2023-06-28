@@ -115,7 +115,10 @@ class MessageStore:
 
         async def start_timeout_countdown():
             await asyncio.sleep(timeout)
-            await subscription.unsubscribe()
+            try:
+                await subscription.unsubscribe()
+            except:
+                pass
 
         timeout_task = asyncio.create_task(start_timeout_countdown())
 
@@ -123,7 +126,10 @@ class MessageStore:
             message = Message.create_from_dict(json.loads(msg.data.decode("utf-8")))
             if predicate(message):
                 timeout_task.cancel()
-                await subscription.unsubscribe()
+                try:                    
+                    await subscription.unsubscribe()
+                except:
+                    pass
                 return message
 
         raise TimeoutException(f"Timed out waiting for a message on subject {subject}")
