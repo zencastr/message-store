@@ -109,7 +109,9 @@ class MessageStore:
         Waits for a message (event/command) on the subject (automatically prefixed by the prefix provided to the ctor)
         that matches the predicate. Returns the message if found, otherwise raises TimeoutException
         """
-        subscription = await self._nats_connection.subscribe(subject)
+        subscription = await self._nats_connection.subscribe(
+            f"{self._nats_subject_prefix}{subject}"
+        )
 
         async def start_timeout_countdown():
             await asyncio.sleep(timeout)
