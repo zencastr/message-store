@@ -13,7 +13,7 @@ class MessageMetadata:
         **additional_props: Any
     ) -> None:
         self.origin_subject = origin_subject
-        self.trace_id = trace_id
+        self.traceId = trace_id
         self.additional_props = additional_props
 
     @staticmethod
@@ -36,5 +36,5 @@ class MessageMetadata:
         if self.origin_subject != None:
             result["originSubject"] = self.origin_subject
         if self.trace_id != None:
-            result["traceId"] = self.trace_id
+            result["traceId"] = self.traceId
         return result
