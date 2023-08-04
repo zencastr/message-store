@@ -35,6 +35,6 @@ class MessageMetadata:
             result = self.additional_props
         if self.origin_subject != None:
             result["originSubject"] = self.origin_subject
-        if self.trace_id != None:
+        if self.traceId != None:
             result["traceId"] = self.traceId
         return result
