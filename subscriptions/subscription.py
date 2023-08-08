@@ -94,7 +94,7 @@ class Subscription:
                         f"Connection to nats/jetstream was closed while handling {message}. It will be retried if it wasn't the last attempt (is_last_attempt != False). Stopping subscription to {self._subject}"
                     )
                     break
-                except Exception as exception:
+                except (Exception, asyncio.CancelledError) as exception:
                     message_store_logger.warning(
                         f"Failed to handle message with subject {jetstream_message.subject}, seq: {jetstream_message.metadata.sequence.stream}, data: {jetstream_message.data}, exception: {exception}"
                     )
