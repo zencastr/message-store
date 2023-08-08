@@ -90,7 +90,7 @@ class Subscription:
                         )
                     await jetstream_message.ack()
                 except ConnectionClosedError:
-                    message_store_logger.warn(
+                    message_store_logger.warning(
                         f"Connection to nats/jetstream was closed while handling {message}. It will be retried if it wasn't the last attempt (is_last_attempt != False). Stopping subscription to {self._subject}"
                     )
                     break
