@@ -53,9 +53,9 @@ class Subscription:
                         0
                     ]  # if there are no messages then TimeoutError will be raised, if it gets here there's 1 message
                 except TimeoutError:
-                    message_store_logger.debug(
-                        f'No messages arrived during the pull_wait_timeout_in_secs ({self._pull_wait_timeout_in_secs}) for subject {self._nats_subject_prefix}{self._subject}. "Re-arming" wait for messages'
-                    )
+                    # message_store_logger.debug(
+                    #     f'No messages arrived during the pull_wait_timeout_in_secs ({self._pull_wait_timeout_in_secs}) for subject {self._nats_subject_prefix}{self._subject}. "Re-arming" wait for messages'
+                    # )
                     continue
                 except ConnectionClosedError:
                     message_store_logger.info(
