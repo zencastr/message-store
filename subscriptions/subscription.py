@@ -85,8 +85,8 @@ class Subscription:
                             self._handlers[message.type](message)
                     else:
                         message_store_logger.debug(
-                            f"Ignoring message. Could not find a handler for message with type {message.type}, subject: {jetstream_message.subject}, stream: {jetstream_message.metadata.stream}. Full message:\n",
-                            json.dumps(message.to_dict(), indent=2),
+                            f"Ignoring message. Could not find a handler for message with type {message.type}, subject: {jetstream_message.subject}, stream: {jetstream_message.metadata.stream}. Full message:"\
+                            f"{json.dumps(message.to_dict(), indent=2)}",
                         )
                     await jetstream_message.ack()
                 except ConnectionClosedError:
