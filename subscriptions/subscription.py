@@ -116,10 +116,10 @@ class Subscription:
         return message.metadata.num_delivered > self._max_number_of_retries
 
     async def _terminate_message(self, message: Msg):
-        message_store_logger.warning(
-            f"Giving up on processing message #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream}. This attempt (#{message.metadata.num_delivered}) exceeds max of {self._max_number_of_retries}"
-        )
         await message.term()
+        message_store_logger.warning(
+            f"Giving up on processing message #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream} (sent +TERM). This attempt (#{message.metadata.num_delivered}) exceeds max of {self._max_number_of_retries}"
+        )
         if self._dead_letter_subject != None:
             failed_message_subject_without_prefix = message.subject[
                 len(self._nats_subject_prefix) :
