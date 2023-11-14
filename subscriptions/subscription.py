@@ -90,7 +90,8 @@ class Subscription:
                         )
                     if message.is_marked_for_termination():
                         await self._terminate_message(jetstream_message)
-                    await jetstream_message.ack()
+                    else:
+                        await jetstream_message.ack()
                 except ConnectionClosedError:
                     message_store_logger.warning(
                         f"Connection to nats/jetstream was closed while handling {message}. It will be retried if it wasn't the last attempt (is_last_attempt != False). Stopping subscription to {self._subject}"
@@ -98,12 +99,13 @@ class Subscription:
                     break
                 except (Exception, asyncio.CancelledError) as exception:
                     message_store_logger.warning(
-                        f"Failed to handle message with subject {jetstream_message.subject}, seq: {jetstream_message.metadata.sequence.stream}, data: {jetstream_message.data}, exception: {exception}"
+                        f"Failed to handle message with subject {jetstream_message.subject}, seq: {jetstream_message.metadata.sequence.stream}, data: {jetstream_message.data}, exception: {type(exception).__name__} {exception}"
                     )
                     if not self._nats_connection.is_closed:
                         if message.is_marked_for_termination():
                             await self._terminate_message(jetstream_message)
-                        await jetstream_message.nak()
+                        else:
+                            await jetstream_message.nak()
                 finally:
                     progress_reporter.stop_reporting_progress()
 
