@@ -20,6 +20,7 @@ class MessageFromSubscription:
         self.subject = subject
         self.is_last_attempt = is_last_attempt
         self.metadata = metadata
+        self._terminate_flag = False
 
     def to_dict(self):
         result = {
@@ -33,6 +34,14 @@ class MessageFromSubscription:
         if self.is_last_attempt != None:
             result["isLastAttempt"] = self.is_last_attempt
         return result
+
+    def mark_for_termination(self):
+        """ Mark message for termination upon handler completion """
+        self._terminate_flag = True
+
+    def is_marked_for_termination(self):
+        """ Check if message is marked for termination """
+        return self._terminate_flag
 
     @staticmethod
     def create_from_js_message(

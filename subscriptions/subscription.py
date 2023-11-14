@@ -88,6 +88,8 @@ class Subscription:
                             f"Ignoring message. Could not find a handler for message with type {message.type}, subject: {jetstream_message.subject}, stream: {jetstream_message.metadata.stream}. Full message:"\
                             f"{json.dumps(message.to_dict(), indent=2)}",
                         )
+                    if message.is_marked_for_termination():
+                        await self._terminate_message(jetstream_message)
                     await jetstream_message.ack()
                 except ConnectionClosedError:
                     message_store_logger.warning(
@@ -99,6 +101,8 @@ class Subscription:
                         f"Failed to handle message with subject {jetstream_message.subject}, seq: {jetstream_message.metadata.sequence.stream}, data: {jetstream_message.data}, exception: {exception}"
                     )
                     if not self._nats_connection.is_closed:
+                        if message.is_marked_for_termination():
+                            await self._terminate_message(jetstream_message)
                         await jetstream_message.nak()
                 finally:
                     progress_reporter.stop_reporting_progress()
@@ -118,7 +122,7 @@ class Subscription:
     async def _terminate_message(self, message: Msg):
         await message.term()
         message_store_logger.warning(
-            f"Giving up on processing message #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream} (sent +TERM). This attempt (#{message.metadata.num_delivered}) exceeds max of {self._max_number_of_retries}"
+            f"Giving up on processing message #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream}. This attempt (#{message.metadata.num_delivered}) may exceed max of {self._max_number_of_retries}"
         )
         if self._dead_letter_subject != None:
             failed_message_subject_without_prefix = message.subject[
