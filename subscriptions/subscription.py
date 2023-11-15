@@ -123,8 +123,9 @@ class Subscription:
 
     async def _terminate_message(self, message: Msg):
         await message.term()
+        overdelivery_warning = f" This attempt (#{message.metadata.num_delivered}) exceeds max of {self._max_number_of_retries}" if message.metadata.num_delivered > self._max_number_of_retries else ""
         message_store_logger.warning(
-            f"Giving up on processing message #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream}. This attempt (#{message.metadata.num_delivered}) may exceed max of {self._max_number_of_retries}"
+            f"Giving up on processing message #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream}." + overdelivery_warning
         )
         if self._dead_letter_subject != None:
             failed_message_subject_without_prefix = message.subject[
