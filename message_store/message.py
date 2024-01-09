@@ -18,7 +18,7 @@ class Message:
             "type": self.type,
             "data": self.data,
         }
-        if self.metadata != None:
+        if self.metadata is not None:
             result["metadata"] = self.metadata.to_dict()
         return result
 

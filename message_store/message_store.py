@@ -1,15 +1,18 @@
-from typing import Optional, Dict, Callable
-from nats.aio.client import Client
-from .message import Message
-from nats.js.api import PubAck
+import asyncio
 import json
+from typing import Optional, Dict, Callable
+
+from nats.aio.client import Client
+from nats.js.api import PubAck
+import nats.js.errors
+
+from .message import Message
 from .projections.fetch import Fetch
 from .projections.projection import Projection
 from .message_from_subscription import MessageFromSubscription
 from .subscriptions.subscription import Subscription
 from .message_store_logger import message_store_logger
 from .timeout_exception import TimeoutException
-import asyncio
 
 
 class MessageStore:
@@ -40,7 +43,7 @@ class MessageStore:
                 f"Stream covering subject {nats_stream_subject} exists. Its name is {stream_name}"
             )
 
-        except:
+        except nats.js.errors.NotFoundError:
             new_stream_name = f"{self._nats_stream_prefix}{category_name}"
             if self._should_create_missing_streams:
                 message_store_logger.info(
@@ -69,7 +72,7 @@ class MessageStore:
         stream - stream name
         """
         headers: Optional[Dict] = None
-        if msg_id != None:
+        if msg_id is not None:
             headers = {"Nats-Msg-Id": msg_id}
         return await self._jetstream.publish(
             f"{self._nats_subject_prefix}{subject}",
@@ -98,7 +101,7 @@ class MessageStore:
             handlers,
             max_number_of_retries,
             dead_letter_subject=f"{self._nats_subject_prefix}{dead_letter_subject}"
-            if dead_letter_subject != None
+            if dead_letter_subject is not None
             else None,
         )
 
@@ -117,7 +120,7 @@ class MessageStore:
             await asyncio.sleep(timeout)
             try:
                 await subscription.unsubscribe()
-            except:
+            except Exception:
                 pass
 
         timeout_task = asyncio.create_task(start_timeout_countdown())
@@ -126,9 +129,9 @@ class MessageStore:
             message = Message.create_from_dict(json.loads(msg.data.decode("utf-8")))
             if predicate(message):
                 timeout_task.cancel()
-                try:                    
+                try:
                     await subscription.unsubscribe()
-                except:
+                except Exception:
                     pass
                 return message
 

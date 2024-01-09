@@ -29,9 +29,9 @@ class MessageFromSubscription:
             "subject": self.subject,
             "seq": self.seq,
         }
-        if self.metadata != None:
+        if self.metadata is not None:
             result["metadata"] = self.metadata.to_dict()
-        if self.is_last_attempt != None:
+        if self.is_last_attempt is not None:
             result["isLastAttempt"] = self.is_last_attempt
         return result
 
@@ -57,7 +57,7 @@ class MessageFromSubscription:
             if "metadata" in parsed_message_data
             else None,
             is_last_attempt=message.metadata.num_delivered >= max_number_of_redeliveries
-            if max_number_of_redeliveries != None
+            if max_number_of_redeliveries is not None
             else None,  # it might actually go over the max_number_of_redelivereis because of timeouts
         )
 

@@ -127,7 +127,7 @@ class Subscription:
         message_store_logger.warning(
             f"Giving up on processing message #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream}." + overdelivery_warning
         )
-        if self._dead_letter_subject != None:
+        if self._dead_letter_subject is not None:
             failed_message_subject_without_prefix = message.subject[
                 len(self._nats_subject_prefix) :
             ]
