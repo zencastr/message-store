@@ -119,11 +119,13 @@ class Subscription:
             self._running_subscription_task = None
 
     def _was_message_redelivered_too_many_times(self, message: Msg):
+        if self._max_number_of_retries is None:
+            return False
         return message.metadata.num_delivered > self._max_number_of_retries
 
     async def _terminate_message(self, message: Msg):
         await message.term()
-        overdelivery_warning = f" This attempt (#{message.metadata.num_delivered}) exceeds max of {self._max_number_of_retries}" if message.metadata.num_delivered > self._max_number_of_retries else ""
+        overdelivery_warning = f" This attempt (#{message.metadata.num_delivered}) exceeds max of {self._max_number_of_retries}" if self._was_message_redelivered_too_many_times(message) else ""
         message_store_logger.warning(
             f"Giving up on processing message #{message.metadata.sequence.stream}, subject {message.subject} from stream {message.metadata.stream}." + overdelivery_warning
         )
