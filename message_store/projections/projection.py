@@ -1,13 +1,13 @@
-from typing import TypeVar, Callable
+from typing import Generic, TypeVar, Callable
 from ..message_from_subscription import MessageFromSubscription
 
 T = TypeVar("T")
 
 
-class Projection:
+class Projection(Generic[T]):
     def __init__(
         self,
-        init: Callable[[None], T],
+        init: Callable[[], T],
         handlers: dict[str, Callable[[T, MessageFromSubscription], T]],
     ):
         self.handlers = handlers

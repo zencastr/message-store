@@ -33,7 +33,7 @@ class Fetch:
         return projection.get_result()
 
     def _get_total_number_of_messages_in_consumer(self, consumer_info: ConsumerInfo):
-        return consumer_info.num_pending + consumer_info.delivered.consumer_seq
+        return consumer_info.num_pending or 0 + consumer_info.delivered.consumer_seq if consumer_info.delivered else 0
 
     def _has_consumer_any_messages(self, consumer_info: ConsumerInfo):
         return self._get_total_number_of_messages_in_consumer(consumer_info) > 0

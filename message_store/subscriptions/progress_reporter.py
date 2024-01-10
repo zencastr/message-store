@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, Callable
+from typing import Optional
 from nats.aio.msg import Msg
 from ..message_store_logger import message_store_logger
 
@@ -30,6 +30,6 @@ class ProgressReporter:
         await self._report_progress(jetstream_message)
 
     def stop_reporting_progress(self):
-        if self._progressTask != None:
+        if self._progressTask is not None:
             self._progressTask.cancel()
             self._progressTask = None
