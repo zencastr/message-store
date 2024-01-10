@@ -29,7 +29,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "nats-py",
+  "nats-py[nkeys]",
 ]
 dynamic = ["version"]
 
