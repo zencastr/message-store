@@ -21,23 +21,25 @@ class MessageStore:
         nats_connection: Client,
         prefix: str,
         should_create_missing_streams: bool = False,
-        max_bytes: int = 4194304,
     ):
         if prefix.endswith("."):
             prefix = prefix[:-1]
         self._nats_connection = nats_connection
         self._jetstream = nats_connection.jetstream()
         self._should_create_missing_streams = should_create_missing_streams
-        self._max_bytes = max_bytes
         self._nats_subject_prefix = f"{prefix}." if prefix != "" else ""
         self._nats_stream_prefix = f"{prefix}-" if prefix != "" else ""
 
-    async def ensure_stream(self, category_name: str) -> None:
+    async def ensure_stream(self,
+                            category_name: str,
+                            max_bytes_on_create: int = 4194304,
+                            ) -> None:
         """
         Will create a stream with {prefix}.category_name if the constructor was
         called with should_create_missing_streams=True (default is False)
         Otherwise an exception will be raised
         The term category comes from here: http://docs.eventide-project.org/user-guide/stream-names/#parts
+        max_bytes_on_create is the maximum number of bytes each message can be, configured when the stream is created.
         """
         nats_stream_subject = f"{self._nats_subject_prefix}{category_name}.>"
         try:
@@ -55,7 +57,7 @@ class MessageStore:
                     f"Stream covering subject {nats_stream_subject} does not exist, creating one named {new_stream_name}"
                 )
                 await self._jetstream.add_stream(
-                    name=new_stream_name, subjects=[nats_stream_subject], max_bytes=self._max_bytes,
+                    name=new_stream_name, subjects=[nats_stream_subject], max_bytes=max_bytes_on_create,
                 )
                 message_store_logger.info(
                     f"Stream {new_stream_name} created successfuly"
