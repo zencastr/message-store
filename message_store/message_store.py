@@ -50,7 +50,7 @@ class MessageStore:
                     f"Stream covering subject {nats_stream_subject} does not exist, creating one named {new_stream_name}"
                 )
                 await self._jetstream.add_stream(
-                    name=new_stream_name, subjects=[nats_stream_subject]
+                    name=new_stream_name, subjects=[nats_stream_subject], max_bytes=4194304,
                 )
                 message_store_logger.info(
                     f"Stream {new_stream_name} created successfuly"
