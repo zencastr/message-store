@@ -17,13 +17,18 @@ from .timeout_exception import TimeoutException
 
 class MessageStore:
     def __init__(
-        self, nats_connection: Client, prefix: str, should_create_missing_streams=False
+        self,
+        nats_connection: Client,
+        prefix: str,
+        should_create_missing_streams: bool = False,
+        max_bytes: int = 4194304,
     ):
         if prefix.endswith("."):
             prefix = prefix[:-1]
         self._nats_connection = nats_connection
         self._jetstream = nats_connection.jetstream()
         self._should_create_missing_streams = should_create_missing_streams
+        self._max_bytes = max_bytes
         self._nats_subject_prefix = f"{prefix}." if prefix != "" else ""
         self._nats_stream_prefix = f"{prefix}-" if prefix != "" else ""
 
@@ -50,7 +55,7 @@ class MessageStore:
                     f"Stream covering subject {nats_stream_subject} does not exist, creating one named {new_stream_name}"
                 )
                 await self._jetstream.add_stream(
-                    name=new_stream_name, subjects=[nats_stream_subject], max_bytes=4194304,
+                    name=new_stream_name, subjects=[nats_stream_subject], max_bytes=self._max_bytes,
                 )
                 message_store_logger.info(
                     f"Stream {new_stream_name} created successfuly"
