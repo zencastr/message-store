@@ -13,6 +13,7 @@ from .message_from_subscription import MessageFromSubscription
 from .subscriptions.subscription import Subscription
 from .message_store_logger import message_store_logger
 from .timeout_exception import TimeoutException
+from .retry_with_exponential_backoff import retry_with_exponential_backoff
 
 
 class MessageStore:
@@ -68,7 +69,7 @@ class MessageStore:
                 ) from None
 
     async def publish_message(
-        self, subject: str, message: Message, msg_id: Optional[str] = None
+        self, subject: str, message: Message, msg_id: Optional[str] = None, timeout_in_seconds: Optional[float] = 60
     ) -> PubAck:
         """
         Publishes a message with the format: type, data and optional metadata to
@@ -81,15 +82,23 @@ class MessageStore:
         headers: Optional[Dict] = None
         if msg_id is not None:
             headers = {"Nats-Msg-Id": msg_id}
-        return await self._jetstream.publish(
+        return retry_with_exponential_backoff(lambda: await self._jetstream.publish(
             f"{self._nats_subject_prefix}{subject}",
             json.dumps(message.to_dict()).encode("utf8"),
             headers=headers,
-        )
+            timeout=timeout_in_seconds
+        ), max_retries=3, is_retriable=lambda e: hasattr(e, "code") and e.code == "503", initial_backoff_time_in_seconds=0.25)
 
     async def fetch(self, subject: str, projection: Projection):
         fetcher = Fetch(self._jetstream, self._nats_subject_prefix)
-        return await fetcher.fetch(subject, projection)
+        return await retry_with_exponential_backoff(
+            lambda: fetcher.fetch(subject, projection), 
+            max_retries=5, 
+            initial_backoff_time_in_seconds=5,
+            is_retriable=lambda e: hasattr(e, "code") \
+                and (e.code == "TIMEOUT" \
+                     or e.code == "503" or\
+                          (e.code == "404" and hasattr(e, "err_code") and e.err_code == 10014))) # consumer_not_found
 
     def create_subscription(
         self,
