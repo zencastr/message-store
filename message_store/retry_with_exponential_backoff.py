@@ -2,6 +2,7 @@ from typing import Callable, Any, Coroutine, TypeVar, cast
 import asyncio
 import traceback
 import inspect
+import itertools
 from .message_store_logger import message_store_logger
 
 T = TypeVar("T")
@@ -16,7 +17,7 @@ async def retry_with_exponential_backoff(
     Retries the given function with exponential backoff
     """
     current_backoff_time_in_seconds = initial_backoff_time_in_seconds
-    for i in range(max_retries):
+    for i in itertools.count():
         try:
             return_value = fn()
             if asyncio.iscoroutine(return_value):
@@ -27,7 +28,7 @@ async def retry_with_exponential_backoff(
         except Exception as e:
             if not is_retriable(e):
                 raise
-            if i == max_retries - 1:
+            if i >= max_retries - 1:
                 raise
             fn_source = inspect.getsource(fn)
             message_store_logger.warning(
@@ -37,4 +38,4 @@ async def retry_with_exponential_backoff(
             await asyncio.sleep(current_backoff_time_in_seconds)
             current_backoff_time_in_seconds *= 2
 
-    raise RuntimeError("Max retries exceeded")
+    raise RuntimeError("retry_with_exponential_backoff: exited loop without returning or raising an exception")
