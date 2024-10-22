@@ -1,4 +1,4 @@
-from typing import Callable, Any, TypeVar
+from typing import Callable, Any, Coroutine, TypeVar, cast
 import asyncio
 import traceback
 import inspect
@@ -7,7 +7,7 @@ from .message_store_logger import message_store_logger
 T = TypeVar("T")
 
 async def retry_with_exponential_backoff(
-    fn: Callable[[], T],
+    fn: Callable[[], T | Coroutine[Any, Any, T]],
     is_retriable: Callable[[Exception], bool],
     max_retries: int = 3,
     initial_backoff_time_in_seconds: float = 0.25,
@@ -22,6 +22,7 @@ async def retry_with_exponential_backoff(
             if asyncio.iscoroutine(return_value):
                 return await asyncio.create_task(return_value)
             else:
+                return_value = cast(T, return_value)
                 return return_value
         except Exception as e:
             if not is_retriable(e):
@@ -35,3 +36,5 @@ async def retry_with_exponential_backoff(
             )
             await asyncio.sleep(current_backoff_time_in_seconds)
             current_backoff_time_in_seconds *= 2
+
+    raise RuntimeError("Max retries exceeded")
