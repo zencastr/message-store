@@ -29,9 +29,9 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install ruff mypy
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with ruff
-      run: |
-        ruff .
     - name: Typecheck with mypy
       run: |
         mypy --install-types --non-interactive message_store/
+    - name: Lint with ruff
+      run: |
+        ruff check

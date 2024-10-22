@@ -1,7 +1,10 @@
-from typing import Optional, Dict, Any
-from .message_metadata import MessageMetadata
-from nats.aio.msg import Msg
+from datetime import datetime
 import json
+from typing import Optional, Dict, Any
+
+from nats.aio.msg import Msg
+
+from .message_metadata import MessageMetadata
 
 
 class MessageFromSubscription:
@@ -11,6 +14,7 @@ class MessageFromSubscription:
         data: Dict[str, Any],
         seq: int,
         subject: str,
+        timestamp: datetime,
         metadata: Optional[MessageMetadata] = None,
         is_last_attempt: Optional[bool] = None,
     ):
@@ -21,6 +25,7 @@ class MessageFromSubscription:
         self.is_last_attempt = is_last_attempt
         self.metadata = metadata
         self._terminate_flag = False
+        self.timestamp = timestamp
 
     def to_dict(self):
         result = {
@@ -28,6 +33,7 @@ class MessageFromSubscription:
             "data": self.data,
             "subject": self.subject,
             "seq": self.seq,
+            "timestamp": self.timestamp.timestamp(),
         }
         if self.metadata is not None:
             result["metadata"] = self.metadata.to_dict()
@@ -53,6 +59,7 @@ class MessageFromSubscription:
             data=parsed_message_data["data"],
             seq=message.metadata.sequence.stream,
             subject=message.subject[len(prefix) :],
+            timestamp=message.metadata.timestamp,
             metadata=MessageMetadata.create_from_dict(parsed_message_data["metadata"])
             if "metadata" in parsed_message_data
             else None,
