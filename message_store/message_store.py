@@ -112,10 +112,14 @@ class MessageStore:
             initial_backoff_time_in_seconds=5,
             is_retriable=lambda e: isinstance(e, nats.errors.TimeoutError)
             or isinstance(e, asyncio.TimeoutError)
-            or hasattr(e, "code")
-            and (
-                e.code == 503
-                or (e.code == 404 and hasattr(e, "err_code") and e.err_code == 10014)
+            or (
+                hasattr(e, "code")
+                and (
+                    e.code == 503
+                    or (
+                        e.code == 404 and hasattr(e, "err_code") and e.err_code == 10014
+                    )
+                )
             ),
         )  # err_code 10014 is consumer not found
 
