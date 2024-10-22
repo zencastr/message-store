@@ -117,7 +117,7 @@ class MessageStore:
                 e.code == 503
                 or (e.code == 404 and hasattr(e, "err_code") and e.err_code == 10014)
             ),
-        )  # c10014 is consumer not found
+        )  # err_code 10014 is consumer not found
 
     def create_subscription(
         self,
