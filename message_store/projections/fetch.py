@@ -27,8 +27,10 @@ class Fetch:
             )
             projection.handle(message.type, message)
             processed_count += 1
-            if processed_count == total_messages_in_stream:
+            if processed_count == total_messages_in_stream:                                
                 await subscription.unsubscribe()
+                await self.ensure_consumer_is_deleted(subject, consumer_name=consumer_info.name)                
+
 
         return projection.get_result()
 
@@ -37,3 +39,17 @@ class Fetch:
 
     def _has_consumer_any_messages(self, consumer_info: ConsumerInfo):
         return self._get_total_number_of_messages_in_consumer(consumer_info) > 0
+
+
+    async def ensure_consumer_is_deleted(self, subject: str, consumer_name: str) -> None:
+        """
+        Jetstream (at least synadia) sometimes takes its time to delete the consumer even when it's ephemeral
+        This method will try to actively delete the consumer
+        """        
+        try:            
+            stream = await self._jetstream_client.find_stream_name_by_subject(subject=f"{self._nats_subject_prefix}{subject}")            
+            await self._jetstream_client.delete_consumer(stream, consumer_name)            
+        except Exception as e:            
+            pass
+
+        
