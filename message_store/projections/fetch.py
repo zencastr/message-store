@@ -49,7 +49,7 @@ class Fetch:
         try:            
             stream = await self._jetstream_client.find_stream_name_by_subject(subject=f"{self._nats_subject_prefix}{subject}")            
             await self._jetstream_client.delete_consumer(stream, consumer_name)            
-        except Exception as e:            
+        except Exception:            
             pass
 
         
