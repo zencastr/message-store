@@ -7,7 +7,6 @@ from .message_store_logger import message_store_logger
 
 T = TypeVar("T")
 
-
 async def retry_with_exponential_backoff(
     fn: Callable[[], T | Coroutine[Any, Any, T]],
     is_retriable: Callable[[Exception], bool],
@@ -39,6 +38,4 @@ async def retry_with_exponential_backoff(
             await asyncio.sleep(current_backoff_time_in_seconds)
             current_backoff_time_in_seconds *= 2
 
-    raise RuntimeError(
-        "retry_with_exponential_backoff: exited loop without returning or raising an exception"
-    )
+    raise RuntimeError("retry_with_exponential_backoff: exited loop without returning or raising an exception")
