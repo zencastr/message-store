@@ -21,7 +21,7 @@ async def retry_with_exponential_backoff(
         try:
             return_value = fn()
             if asyncio.iscoroutine(return_value):
-                return await asyncio.create_task(return_value)
+                return await return_value
             else:
                 return_value = cast(T, return_value)
                 return return_value

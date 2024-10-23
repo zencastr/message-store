@@ -99,7 +99,7 @@ class MessageStore:
                 timeout=timeout_in_seconds,
             ),
             max_retries=3,
-            is_retriable=lambda e: hasattr(e, "code") and e.code == "503",
+            is_retriable=lambda e: hasattr(e, "code") and e.code == 503,
             initial_backoff_time_in_seconds=0.25,
         )
 
