@@ -22,12 +22,12 @@ class ProgressReporter:
         )
 
     async def _report_progress(self, jetstream_message: Msg):
-        await asyncio.sleep(self._reportIntervalInSeconds)
-        await jetstream_message.in_progress()
-        message_store_logger.debug(
-            f"Sent +WPI to jetstream for message with seq: {jetstream_message.metadata.sequence.stream}, subject {jetstream_message.subject} from stream {jetstream_message.metadata.stream}"
-        )
-        await self._report_progress(jetstream_message)
+        while True:
+            await asyncio.sleep(self._reportIntervalInSeconds)
+            await jetstream_message.in_progress()
+            message_store_logger.debug(
+                f"Sent +WPI to jetstream for message with seq: {jetstream_message.metadata.sequence.stream}, subject {jetstream_message.subject} from stream {jetstream_message.metadata.stream}"
+            )
 
     def stop_reporting_progress(self):
         if self._progressTask is not None:
