@@ -24,7 +24,13 @@ class ProgressReporter:
     async def _report_progress(self, jetstream_message: Msg):
         while True:
             await asyncio.sleep(self._reportIntervalInSeconds)
-            await jetstream_message.in_progress()
+            try:
+                await jetstream_message.in_progress()
+            except Exception as e:
+                message_store_logger.error(
+                    f"Error sending +WPI to jetstream for message with seq: {jetstream_message.metadata.sequence.stream}, subject {jetstream_message.subject} from stream {jetstream_message.metadata.stream}. Error: {e}"
+                )
+                continue
             message_store_logger.debug(
                 f"Sent +WPI to jetstream for message with seq: {jetstream_message.metadata.sequence.stream}, subject {jetstream_message.subject} from stream {jetstream_message.metadata.stream}"
             )
