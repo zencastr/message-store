@@ -38,3 +38,30 @@ async def test_consumer_creation_failure(nats_client: Client):
     message_store = MessageStore(nats_client, prefix="test", should_create_missing_streams=False)
     with pytest.raises(Exception):
         await message_store.ensure_stream("dont-make-stream")
+
+
+@pytest.mark.asyncio
+async def test_publish_and_subscribe(nats_client: Client):
+    message_store = MessageStore(nats_client, prefix="test", should_create_missing_streams=True)
+    stream_suffix = "publish-stream"
+    await message_store.ensure_stream(stream_suffix)
+
+    async def good_handler(msg: MessageFromSubscription):
+        assert msg.subject.startswith(f"test.{stream_suffix}")
+        assert msg.data == b'{"key": "value"}'
+
+    async def bad_handler(msg: MessageFromSubscription):
+        assert msg.subject.startswith(f"test.{stream_suffix}")
+        raise Exception("BadCommand")
+
+    sub: Subscription = message_store.create_subscription(
+        stream_suffix,
+        "test-sub",
+        handlers={
+            "GoodCommand": good_handler,
+            "BadCommand": bad_handler,
+        })
+    sub_task = sub.start()
+
+    await message_store.publish_message(stream_suffix, Message(type="GoodCommand", data={"key": "value"}))
+    await asyncio.sleep(1)
