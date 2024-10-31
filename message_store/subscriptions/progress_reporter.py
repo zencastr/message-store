@@ -11,7 +11,7 @@ class ProgressReporter:
     The default  for the progress reporter 15 secs
     """
 
-    def __init__(self, report_interval_in_seconds=15):
+    def __init__(self, report_interval_in_seconds=10):
         self._reportIntervalInSeconds = report_interval_in_seconds
         self._progressTask: Optional[asyncio.Task[None]]
         self._progressTask = None
