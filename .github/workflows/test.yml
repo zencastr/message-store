@@ -22,7 +22,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov coverage-badge
+          pip install .
+          pip install -r test/requirements.txt
 
       - name: Spin up NATS server
         run: |
