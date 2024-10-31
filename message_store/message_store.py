@@ -112,6 +112,7 @@ class MessageStore:
             initial_backoff_time_in_seconds=5,
             is_retriable=lambda e: isinstance(e, nats.errors.TimeoutError)
             or isinstance(e, asyncio.TimeoutError)
+            or isinstance(e, nats.js.errors.NoStreamResponseError)
             or (
                 hasattr(e, "code")
                 and (
