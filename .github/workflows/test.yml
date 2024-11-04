@@ -43,7 +43,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add test/coverage.svg
-          git commit -m "Add coverage badge"
-          git push
+          git commit -m "Add coverage badge" || echo "No changes to commit"
+          git diff --cached --quiet || git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
