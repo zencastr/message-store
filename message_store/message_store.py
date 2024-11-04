@@ -35,14 +35,16 @@ class MessageStore:
     async def ensure_stream(
         self,
         category_name: str,
-        max_bytes_on_create: int = 4194304,
+        max_bytes_on_create: int = 2**30,  # 1GB
+        max_msg_size_on_create: int = 2**22,  # 4MB
     ) -> None:
         """
         Will create a stream with {prefix}.category_name if the constructor was
         called with should_create_missing_streams=True (default is False)
         Otherwise an exception will be raised
         The term category comes from here: http://docs.eventide-project.org/user-guide/stream-names/#parts
-        max_bytes_on_create is the maximum number of bytes each message can be, configured when the stream is created.
+        max_bytes_on_create is the maximum number of bytes the entire stream can be, configured when the stream is created.
+        max_msg_size_on_create is the maximum size of a single message in the stream, configured when the stream is created.
         """
         nats_stream_subject = f"{self._nats_subject_prefix}{category_name}.>"
         try:
@@ -63,6 +65,7 @@ class MessageStore:
                     name=new_stream_name,
                     subjects=[nats_stream_subject],
                     max_bytes=max_bytes_on_create,
+                    max_msg_size=max_msg_size_on_create,
                 )
                 message_store_logger.info(
                     f"Stream {new_stream_name} created successfuly"
