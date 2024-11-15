@@ -101,10 +101,10 @@ class MessageStore:
                 headers=headers,
                 timeout=timeout_in_seconds,
             ),
-            max_retries=3,
+            max_retries=5,
             is_retriable=lambda e: isinstance(e, nats.js.errors.NoStreamResponseError)
             or (hasattr(e, "code") and e.code == 503),
-            initial_backoff_time_in_seconds=0.25,
+            initial_backoff_time_in_seconds=1.0,
         )
 
     async def fetch(self, subject: str, projection: Projection):
