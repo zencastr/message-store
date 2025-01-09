@@ -15,7 +15,7 @@ class FetchTests(unittest.TestCase):
 
         fetch.ensure_consumer_is_deleted_mock.assert_called_once()
         fetch.subscribe_mock.assert_called_once_with(
-            f"the_nats_env_subject_prefix.some_subject.123", ordered_consumer=True
+            "the_nats_env_subject_prefix.some_subject.123", ordered_consumer=True
         )
         self.assertEqual(result, {"result": "init"})
 
@@ -32,7 +32,7 @@ class FetchTests(unittest.TestCase):
         result = asyncio.run(fetch.fetch("subject", projection))
 
         fetch.subscribe_mock.assert_called_once_with(
-            f"the_nats_env_subject_prefix.subject", ordered_consumer=True
+            "the_nats_env_subject_prefix.subject", ordered_consumer=True
         )
         fetch.ensure_consumer_is_deleted_mock.assert_called_once()
         self.assertEqual(result, {"count": 1})
@@ -57,7 +57,7 @@ class FetchTests(unittest.TestCase):
         result = asyncio.run(fetch.fetch("some_subject.123", projection))
 
         fetch.subscribe_mock.assert_called_once_with(
-            f"the_nats_env_subject_prefix.some_subject.123", ordered_consumer=True
+            "the_nats_env_subject_prefix.some_subject.123", ordered_consumer=True
         )
         fetch.ensure_consumer_is_deleted_mock.assert_called_once()
         self.assertEqual(result, {"count": 3})
@@ -82,7 +82,7 @@ class FetchTests(unittest.TestCase):
         result = asyncio.run(fetch.fetch("some_subject.123", projection, until_seq=2))
 
         fetch.subscribe_mock.assert_called_once_with(
-            f"the_nats_env_subject_prefix.some_subject.123", ordered_consumer=True
+            "the_nats_env_subject_prefix.some_subject.123", ordered_consumer=True
         )
         fetch.ensure_consumer_is_deleted_mock.assert_called_once()
         self.assertEqual(result, {"count": 2})
@@ -107,7 +107,7 @@ class FetchTests(unittest.TestCase):
         result = asyncio.run(fetch.fetch("some_subject.123", projection, until_seq=3))
 
         fetch.subscribe_mock.assert_called_once_with(
-            f"the_nats_env_subject_prefix.some_subject.123", ordered_consumer=True
+            "the_nats_env_subject_prefix.some_subject.123", ordered_consumer=True
         )
         fetch.ensure_consumer_is_deleted_mock.assert_called_once()
         self.assertEqual(result, {"count": 2})
