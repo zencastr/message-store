@@ -9,7 +9,7 @@ class Fetch:
         self._jetstream_client = jetstream_client
         self._nats_subject_prefix = nats_subject_prefix
 
-    async def fetch(self, subject: str, projection: Projection, until_seq: int = None):        
+    async def fetch(self, subject: str, projection: Projection, until_seq: int | None = None):        
         subscription = await self._jetstream_client.subscribe(
             f"{self._nats_subject_prefix}{subject}", ordered_consumer=True
         )
