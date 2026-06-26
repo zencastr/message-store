@@ -1,4 +1,5 @@
 from .message_store import MessageStore
+from .message_store_protocol import MessageStoreProtocol
 from .message import Message
 from .message_metadata import MessageMetadata
 from .message_from_subscription import MessageFromSubscription
@@ -9,6 +10,7 @@ from .timeout_exception import TimeoutException
 
 __all__ = [
     "MessageStore",
+    "MessageStoreProtocol",
     "Message",
     "MessageMetadata",
     "MessageFromSubscription",

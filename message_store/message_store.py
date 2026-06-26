@@ -8,6 +8,7 @@ from nats.js.api import PubAck
 import nats.js.errors
 
 from .message import Message
+from .message_store_protocol import MessageStoreProtocol
 from .projections.fetch import Fetch
 from .projections.projection import Projection
 from .message_from_subscription import MessageFromSubscription
@@ -17,7 +18,7 @@ from .timeout_exception import TimeoutException
 from .retry_with_exponential_backoff import retry_with_exponential_backoff
 
 
-class MessageStore:
+class MessageStore(MessageStoreProtocol):
     def __init__(
         self,
         nats_connection: Client,
@@ -81,6 +82,7 @@ class MessageStore:
         message: Message,
         msg_id: Optional[str] = None,
         timeout_in_seconds: Optional[float] = 60,
+        headers: Optional[Dict[str, str]] = None,
     ) -> PubAck:
         """
         Publishes a message with the format: type, data and optional metadata to
@@ -89,21 +91,24 @@ class MessageStore:
         duplicate - was there a message published with the same msg_id inside the stream's duplicate window check
         seq - sequence number for the stream
         stream - stream name
+        headers - optional NATS headers to attach (e.g. for trace context propagation). Merged with
+        the Nats-Msg-Id header when msg_id is provided.
         """
-        headers: Optional[Dict] = None
+        merged_headers: Optional[Dict[str, str]] = dict(headers) if headers else None
         if msg_id is not None:
-            headers = {"Nats-Msg-Id": msg_id}
+            merged_headers = merged_headers or {}
+            merged_headers["Nats-Msg-Id"] = msg_id
 
         return await retry_with_exponential_backoff(
             lambda: self._jetstream.publish(
                 f"{self._nats_subject_prefix}{subject}",
                 json.dumps(message.to_dict()).encode("utf8"),
-                headers=headers,
+                headers=merged_headers,
                 timeout=timeout_in_seconds,
             ),
             max_retries=3,
             is_retriable=lambda e: isinstance(e, nats.js.errors.NoStreamResponseError)
-            or (hasattr(e, "code") and e.code == 503),
+            or getattr(e, "code", None) == 503,
             initial_backoff_time_in_seconds=0.25,
         )
 
@@ -117,14 +122,10 @@ class MessageStore:
             is_retriable=lambda e: isinstance(e, nats.errors.TimeoutError)
             or isinstance(e, asyncio.TimeoutError)
             or isinstance(e, nats.js.errors.NoStreamResponseError)
+            or getattr(e, "code", None) == 503
             or (
-                hasattr(e, "code")
-                and (
-                    e.code == 503
-                    or (
-                        e.code == 404 and hasattr(e, "err_code") and e.err_code == 10014
-                    )
-                )
+                getattr(e, "code", None) == 404
+                and getattr(e, "err_code", None) == 10014
             ),
         )  # err_code 10014 is consumer not found
 

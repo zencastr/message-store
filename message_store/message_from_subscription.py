@@ -17,6 +17,7 @@ class MessageFromSubscription:
         timestamp: datetime,
         metadata: Optional[MessageMetadata] = None,
         is_last_attempt: Optional[bool] = None,
+        _raw_jetstream_message: Optional[Msg] = None,
     ):
         self.type = type
         self.data = data
@@ -26,6 +27,11 @@ class MessageFromSubscription:
         self.metadata = metadata
         self._terminate_flag = False
         self.timestamp = timestamp
+        # The raw underlying JetStream message. Exposed so external concerns (e.g. OpenTelemetry
+        # tracing) can read transport-level details such as headers, stream/consumer names,
+        # redelivery count and the stored timestamp. Internal by convention (single underscore):
+        # the message store retains full ownership of ack/nak/term. Not serialized in to_dict.
+        self._raw_jetstream_message = _raw_jetstream_message
 
     def to_dict(self):
         result = {
@@ -66,6 +72,7 @@ class MessageFromSubscription:
             is_last_attempt=message.metadata.num_delivered >= max_number_of_redeliveries
             if max_number_of_redeliveries is not None
             else None,  # it might actually go over the max_number_of_redelivereis because of timeouts
+            _raw_jetstream_message=message,
         )
 
     def __repr__(self):
